@@ -1,180 +1,278 @@
-import { Image } from 'expo-image';
-import { SymbolView } from 'expo-symbols';
-import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { loadStore, PrayerEntry } from '@/store/usePrayerStore';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Calendar } from 'react-native-calendars';
 
-import { ExternalLink } from '@/components/external-link';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Collapsible } from '@/components/ui/collapsible';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+export default function CalendarScreen() {
+  const router = useRouter();
+  const [entries, setEntries] = useState<PrayerEntry[]>([]);
+  const [selectedDate, setSelectedDate] = useState('');
 
-export default function TabTwoScreen() {
-  const safeAreaInsets = useSafeAreaInsets();
-  const insets = {
-    ...safeAreaInsets,
-    bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
-  };
-  const theme = useTheme();
+  // Reload when screen is focused
+  useFocusEffect(
+    useCallback(() => {
+      loadStore().then((data: Awaited<ReturnType<typeof loadStore>>) => setEntries(data.entries));
+    }, [])
+  );
 
-  const contentPlatformStyle = Platform.select({
-    android: {
-      paddingTop: insets.top,
-      paddingLeft: insets.left,
-      paddingRight: insets.right,
-      paddingBottom: insets.bottom,
-    },
-    web: {
-      paddingTop: Spacing.six,
-      paddingBottom: Spacing.four,
-    },
-  });
+  // Build marked dates from entries
+  const markedDates = entries.reduce((acc, entry) => {
+    acc[entry.date] = {
+      marked: true,
+      dotColor: '#c9a84c',
+      ...(entry.date === selectedDate && {
+        selected: true,
+        selectedColor: '#c9a84c',
+      }),
+    };
+    return acc;
+  }, {} as Record<string, any>);
+
+  // Also mark selected date even if no entries
+  if (selectedDate && !markedDates[selectedDate]) {
+    markedDates[selectedDate] = {
+      selected: true,
+      selectedColor: '#c9a84c',
+    };
+  }
+
+  // Get entries for selected day
+  const selectedEntries = entries.filter(e => e.date === selectedDate);
+
+  // Total hours for selected day
+  const selectedHours = selectedEntries.reduce((sum, e) => sum + e.hours, 0);
 
   return (
-    <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
-      contentInset={insets}
-      contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">Explore</ThemedText>
-          <ThemedText style={styles.centerText} themeColor="textSecondary">
-            This starter app includes example{'\n'}code to help you get started.
-          </ThemedText>
+    <ScrollView style={styles.container}>
 
-          <ExternalLink href="https://docs.expo.dev" asChild>
-            <Pressable style={({ pressed }) => pressed && styles.pressed}>
-              <ThemedView type="backgroundElement" style={styles.linkButton}>
-                <ThemedText type="link">Expo documentation</ThemedText>
-                <SymbolView
-                  tintColor={theme.text}
-                  name={{ ios: 'arrow.up.right.square', android: 'link', web: 'link' }}
-                  size={12}
-                />
-              </ThemedView>
-            </Pressable>
-          </ExternalLink>
-        </ThemedView>
+      <Text style={styles.heading}>📅 Prayer Calendar</Text>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title="File-based routing">
-            <ThemedText type="small">
-              This app has two screens: <ThemedText type="code">src/app/index.tsx</ThemedText> and{' '}
-              <ThemedText type="code">src/app/explore.tsx</ThemedText>
-            </ThemedText>
-            <ThemedText type="small">
-              The layout file in <ThemedText type="code">src/app/_layout.tsx</ThemedText> sets up
-              the tab navigator.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/router/introduction">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+      {/* Calendar */}
+      <Calendar
+        onDayPress={(day: any) => setSelectedDate(day.dateString)}
+        markedDates={markedDates}
+        theme={{
+          backgroundColor: '#0f0f1a',
+          calendarBackground: '#1a1a2e',
+          textSectionTitleColor: '#c9a84c',
+          selectedDayBackgroundColor: '#c9a84c',
+          selectedDayTextColor: '#0f0f1a',
+          todayTextColor: '#c9a84c',
+          dayTextColor: '#ffffff',
+          textDisabledColor: '#444',
+          dotColor: '#c9a84c',
+          selectedDotColor: '#0f0f1a',
+          arrowColor: '#c9a84c',
+          monthTextColor: '#c9a84c',
+          indicatorColor: '#c9a84c',
+          textDayFontWeight: '400',
+          textMonthFontWeight: 'bold',
+          textDayHeaderFontWeight: '600',
+          textDayFontSize: 14,
+          textMonthFontSize: 16,
+          textDayHeaderFontSize: 13,
+        }}
+        style={styles.calendar}
+      />
 
-          <Collapsible title="Android, iOS, and web support">
-            <ThemedView type="backgroundElement" style={styles.collapsibleContent}>
-              <ThemedText type="small">
-                You can open this project on Android, iOS, and the web. To open the web version,
-                press <ThemedText type="smallBold">w</ThemedText> in the terminal running this
-                project.
-              </ThemedText>
-              <Image
-                source={require('@/assets/images/tutorial-web.png')}
-                style={styles.imageTutorial}
-              />
-            </ThemedView>
-          </Collapsible>
+      {/* Selected Day Panel */}
+      {selectedDate ? (
+        <View style={styles.dayPanel}>
 
-          <Collapsible title="Images">
-            <ThemedText type="small">
-              For static images, you can use the <ThemedText type="code">@2x</ThemedText> and{' '}
-              <ThemedText type="code">@3x</ThemedText> suffixes to provide files for different
-              screen densities.
-            </ThemedText>
-            <Image source={require('@/assets/images/react-logo.png')} style={styles.imageReact} />
-            <ExternalLink href="https://reactnative.dev/docs/images">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+          <View style={styles.dayPanelHeader}>
+            <View>
+              <Text style={styles.dayPanelDate}>
+                {new Date(selectedDate + 'T00:00:00').toDateString()}
+              </Text>
+              {selectedEntries.length > 0 && (
+                <Text style={styles.dayPanelHours}>
+                  {selectedHours.toFixed(1)} hrs prayed
+                </Text>
+              )}
+            </View>
+            <TouchableOpacity
+              style={styles.addBtn}
+              onPress={() => router.push('/log-prayer')}
+            >
+              <Text style={styles.addBtnText}>+ Add</Text>
+            </TouchableOpacity>
+          </View>
 
-          <Collapsible title="Light and dark mode components">
-            <ThemedText type="small">
-              This template has light and dark mode support. The{' '}
-              <ThemedText type="code">useColorScheme()</ThemedText> hook lets you inspect what the
-              user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-            </ThemedText>
-            <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-              <ThemedText type="linkPrimary">Learn more</ThemedText>
-            </ExternalLink>
-          </Collapsible>
+          {/* Entries for selected day */}
+          {selectedEntries.length === 0 ? (
+            <View style={styles.emptyDay}>
+              <Text style={styles.emptyDayText}>
+                No prayers logged for this day.{'\n'}
+                Tap "+ Add" to log one.
+              </Text>
+            </View>
+          ) : (
+            selectedEntries.map(entry => (
+              <View key={entry.id} style={styles.entryCard}>
+                <View style={styles.entryHeader}>
+                  <Text style={styles.entryTitle}>{entry.title}</Text>
+                  <Text style={styles.entryHours}>{entry.hours}h</Text>
+                </View>
+                {entry.topic ? (
+                  <Text style={styles.entryTopic}>📖 {entry.topic}</Text>
+                ) : null}
+                {entry.prayerPoints ? (
+                  <Text style={styles.entryPoints} numberOfLines={2}>
+                    🙏 {entry.prayerPoints}
+                  </Text>
+                ) : null}
+                {entry.scriptures ? (
+                  <Text style={styles.entryScripture} numberOfLines={1}>
+                    📜 {entry.scriptures}
+                  </Text>
+                ) : null}
+                <Text style={styles.entryBadge}>
+                  {entry.timedSession ? '⏱ Timer session' : '✍️ Manual entry'}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
+      ) : (
+        <View style={styles.noSelectionBox}>
+          <Text style={styles.noSelectionText}>
+            Tap a day on the calendar to see{'\n'}or add prayers for that day.
+          </Text>
+        </View>
+      )}
 
-          <Collapsible title="Animations">
-            <ThemedText type="small">
-              This template includes an example of an animated component. The{' '}
-              <ThemedText type="code">src/components/ui/collapsible.tsx</ThemedText> component uses
-              the powerful <ThemedText type="code">react-native-reanimated</ThemedText> library to
-              animate opening this hint.
-            </ThemedText>
-          </Collapsible>
-        </ThemedView>
-        {Platform.OS === 'web' && <WebBadge />}
-      </ThemedView>
+      <View style={{ height: 40 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  container: {
+    flex: 1,
+    backgroundColor: '#0f0f1a',
+    padding: 16,
+  },
+  heading: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#c9a84c',
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  calendar: {
+    borderRadius: 14,
+    overflow: 'hidden',
+    marginBottom: 20,
+  },
+
+  // Day Panel
+  dayPanel: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2a2a4a',
+  },
+  dayPanelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  dayPanelDate: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  dayPanelHours: {
+    fontSize: 12,
+    color: '#c9a84c',
+    marginTop: 2,
+  },
+  addBtn: {
+    backgroundColor: '#c9a84c',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  addBtnText: {
+    color: '#0f0f1a',
+    fontWeight: 'bold',
+    fontSize: 13,
+  },
+
+  // Empty day
+  emptyDay: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyDayText: {
+    color: '#888',
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+
+  // Entry cards
+  entryCard: {
+    backgroundColor: '#0f0f1a',
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#2a2a4a',
+  },
+  entryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  entryTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#fff',
     flex: 1,
   },
-  contentContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  entryHours: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    color: '#c9a84c',
   },
-  container: {
-    maxWidth: MaxContentWidth,
-    flexGrow: 1,
+  entryTopic: {
+    fontSize: 12,
+    color: '#888',
+    marginTop: 4,
   },
-  titleContainer: {
-    gap: Spacing.three,
+  entryPoints: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  entryScripture: {
+    fontSize: 12,
+    color: '#777',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  entryBadge: {
+    fontSize: 11,
+    color: '#555',
+    marginTop: 6,
+  },
+
+  // No selection
+  noSelectionBox: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 14,
+    padding: 32,
     alignItems: 'center',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.six,
+    borderWidth: 1,
+    borderColor: '#2a2a4a',
   },
-  centerText: {
+  noSelectionText: {
+    color: '#888',
     textAlign: 'center',
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  linkButton: {
-    flexDirection: 'row',
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two,
-    borderRadius: Spacing.five,
-    justifyContent: 'center',
-    gap: Spacing.one,
-    alignItems: 'center',
-  },
-  sectionsWrapper: {
-    gap: Spacing.five,
-    paddingHorizontal: Spacing.four,
-    paddingTop: Spacing.three,
-  },
-  collapsibleContent: {
-    alignItems: 'center',
-  },
-  imageTutorial: {
-    width: '100%',
-    aspectRatio: 296 / 171,
-    borderRadius: Spacing.three,
-    marginTop: Spacing.two,
-  },
-  imageReact: {
-    width: 100,
-    height: 100,
-    alignSelf: 'center',
+    lineHeight: 22,
   },
 });
