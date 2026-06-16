@@ -1,56 +1,36 @@
-# Welcome to your Expo app 👋
+# 🙏 Prayer Journal
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+An offline-first Android app for logging and tracking prayer time, built with React Native and Expo.
 
-## Get started
+## Features
 
-1. Install dependencies
+- **Manual & Timer Logging** — Log prayer sessions by entering hours directly, or use a live start/pause/resume/finish timer
+- **Prayer Topics** — Create reusable categories (e.g. "Family", "Quick Understanding") with hour-based targets
+- **Progress Tracking** — Visual progress bars show percentage completion toward each topic's target
+- **Calendar View** — Browse prayer history by date, with daily entry details
+- **Prayer Points & Scriptures** — Attach written prayer points and relevant scriptures to each entry
+- **Fully Offline** — All data is stored locally on-device using AsyncStorage; no internet connection required
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+- **React Native** (Expo, Expo Router)
+- **TypeScript**
+- **AsyncStorage** for local persistence
+- **react-native-calendars** for the calendar UI
 
-   ```bash
-   npx expo start
-   ```
+## Screenshots
 
-In the output, you'll find options to open the app in a
+*(Add a few screenshots here once you have them — see note below)*
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Getting Started
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+\`\`\`bash
+npm install
+npx expo start
+\`\`\`
 
-## Get a fresh project
+Scan the QR code with the Expo Go app on Android to run it on your device.
 
-When you're ready, run:
+## Status
 
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-### Other setup steps
-
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Personal project, built as a first mobile app. Currently distributed as a standalone APK (not on Google Play).
